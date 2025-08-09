@@ -107,25 +107,25 @@ export default function RTSPViewer({
     };
   }, []);
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-4">
-          Visualizador RTSP - Câmera Tapo
-        </h1>
+  const ConnStats = () => (
+    <div className="mb-4 p-3 rounded-lg bg-gray-100">
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-3 h-3 rounded-full ${
+            isConnected ? "bg-green-500" : "bg-red-500"
+          }`}
+        ></div>
+        <span className="font-medium">Status: {status}</span>
+      </div>
+      {error && <div className="mt-2 text-red-600 text-sm">⚠️ {error}</div>}
+    </div>
+  );
 
+  return (
+    <div className="p-2 max-w-4xl w-full bg-blue-500">
+      <div className="mb-6">
         {/* Status de conexão */}
-        <div className="mb-4 p-3 rounded-lg bg-gray-100">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                isConnected ? "bg-green-500" : "bg-red-500"
-              }`}
-            ></div>
-            <span className="font-medium">Status: {status}</span>
-          </div>
-          {error && <div className="mt-2 text-red-600 text-sm">⚠️ {error}</div>}
-        </div>
+        <ConnStats />
 
         {/* Controles de conexão */}
         <div className="flex gap-3 mb-6">
@@ -225,4 +225,3 @@ export default function RTSPViewer({
     </div>
   );
 }
-
