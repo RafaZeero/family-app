@@ -5,7 +5,7 @@ interface RTSPViewerProps {
 }
 
 export default function RTSPViewer({
-  serverUrl = "ws://localhost:3001",
+  serverUrl = "ws://localhost:3005",
 }: RTSPViewerProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [currentStream, setCurrentStream] = useState<string | null>(null);
