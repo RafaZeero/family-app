@@ -6,7 +6,7 @@ interface RTSPViewerProps {
 }
 
 export default function RTSPViewer({
-  serverUrl = "ws://localhost:3005",
+  serverUrl = "ws://localhost:3005/?auth_conn=123",
 }: RTSPViewerProps) {
   const [ffmpegInfo, setFfmpegInfo] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -166,7 +166,9 @@ export default function RTSPViewer({
             Testar FFmpeg sidecar
           </button>
           {ffmpegInfo && (
-            <span className="text-sm font-mono text-gray-700">{ffmpegInfo}</span>
+            <span className="text-sm font-mono text-gray-700">
+              {ffmpegInfo}
+            </span>
           )}
         </div>
 

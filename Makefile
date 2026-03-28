@@ -8,7 +8,8 @@ dev:
 # Start API server
 api:
 	@echo "Starting API server..."
-	@cd api && pnpm run dev
+	# @cd api && pnpm run dev
+	@cd api_go && go run main.go
 
 # Start Tauri development server
 tauri:
