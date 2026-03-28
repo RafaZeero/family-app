@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 interface RTSPViewerProps {
   serverUrl?: string;
@@ -7,6 +8,7 @@ interface RTSPViewerProps {
 export default function RTSPViewer({
   serverUrl = "ws://localhost:3005",
 }: RTSPViewerProps) {
+  const [ffmpegInfo, setFfmpegInfo] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [currentStream, setCurrentStream] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +16,15 @@ export default function RTSPViewer({
 
   const wsRef = useRef<WebSocket | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  const testFfmpeg = async () => {
+    try {
+      const version = await invoke<string>("ffmpeg_version");
+      setFfmpegInfo(version.split("\n")[0]);
+    } catch (e) {
+      setFfmpegInfo(`Erro: ${e}`);
+    }
+  };
 
   const connectWebSocket = () => {
     try {
@@ -144,6 +155,19 @@ export default function RTSPViewer({
           >
             Desconectar
           </button>
+        </div>
+
+        {/* Teste FFmpeg sidecar */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={testFfmpeg}
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+          >
+            Testar FFmpeg sidecar
+          </button>
+          {ffmpegInfo && (
+            <span className="text-sm font-mono text-gray-700">{ffmpegInfo}</span>
+          )}
         </div>
 
         {/* Controles de stream */}
