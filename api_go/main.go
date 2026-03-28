@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/google/uuid"
@@ -18,12 +19,12 @@ const (
 	PORT               = 3005
 	IP_ADDR            = "192.168.0.5"
 	RTSP_URL_STREAM_01 = "rtsp://rafaa99:Rafa1234@%s/stream1" // Alta qualidade
-	RTSP_URL_STREAM_02 = "rtsp://rafaa99:Rafa1234@%s/stream2" // Alta qualidade
+	RTSP_URL_STREAM_02 = "rtsp://rafaa99:Rafa1234@%s/stream2" // Baixa qualidade
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
-} // use default options
+}
 
 type Client struct {
 	id   string
@@ -195,6 +196,12 @@ func startRTSPStream(streamUrl string, c *Client) *exec.Cmd {
 		return nil
 	}
 
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
 	cmd.Start()
 
 	go func() {
@@ -237,16 +244,23 @@ func startRTSPStream(streamUrl string, c *Client) *exec.Cmd {
 		cmd.Wait() // recolhe o processo filho
 	}()
 
-	// // Run the command and capture its combined output (stdout and stderr).
-	// output, err := cmd.CombinedOutput()
-	// if err != nil {
-	// 	// Log any error, including a non-zero exit status.
-	// 	log.Fatal(err)
-	// 	return nil
-	// }
-	//
-	// Print the output as a string.
-	// fmt.Printf("Output: %s\n", string(output))
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, err := stderr.Read(buf)
+			if n > 0 {
+				msg := string(buf[:n])
+				if strings.ContainsAny(msg, "error\nError\nfailed") {
+					// @TODO: improve error
+					c.send <- []byte(msg)
+				}
+
+			}
+			if err != nil {
+				break
+			}
+		}
+	}()
 
 	return cmd
 }
