@@ -3,15 +3,14 @@ import { createPortal } from "react-dom";
 import { useHeaderStore } from "@/stores/header-store";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
-import {
-  Maximize2,
-  Minimize2,
-  PictureInPicture,
-  PictureInPicture2,
-  Pin,
-  PinOff,
-} from "lucide-react";
+import { Maximize2, Minimize2, Pin, PinOff } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -34,9 +33,9 @@ export default function RTSPViewer({
   const [isInAppFullscreen, setIsInAppFullscreen] = useState(false);
   const [inAppSize, setInAppSize] = useState<{ width: number; height: number } | null>(null);
   const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
-  const [isPiP, setIsPiP] = useState(false);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(false);
   const [selectedStream, setSelectedStream] = useState<"stream1" | "stream2">("stream1");
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const { setContent, clearContent } = useHeaderStore();
 
@@ -100,10 +99,7 @@ export default function RTSPViewer({
       const win = getCurrentWindow();
       const physical = await win.innerSize();
       const scale = await win.scaleFactor();
-      setInAppSize({
-        width: physical.width / scale,
-        height: physical.height / scale,
-      });
+      setInAppSize({ width: physical.width / scale, height: physical.height / scale });
       setIsInAppFullscreen(true);
     } else {
       setIsInAppFullscreen(false);
@@ -113,19 +109,7 @@ export default function RTSPViewer({
 
   const wsRef = useRef<WebSocket | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-
-  // Inicializa o canvas stream no video element para habilitar PiP
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
-
-    const stream = canvas.captureStream(10);
-    video.srcObject = stream;
-    video.play().catch(() => {});
-  }, []);
 
   // Atualiza inAppSize quando a janela for redimensionada ou mudar de monitor (DPI)
   useEffect(() => {
@@ -177,34 +161,6 @@ export default function RTSPViewer({
     const onChange = () => setIsGlobalFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-  // Picture in Picture
-  const togglePiP = async () => {
-    const video = videoRef.current;
-    if (!video) return;
-    try {
-      if (!isPiP) {
-        await video.requestPictureInPicture();
-      } else {
-        await document.exitPictureInPicture();
-      }
-    } catch (e) {
-      toast.error("Picture in Picture nao suportado neste ambiente");
-    }
-  };
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const onEnter = () => setIsPiP(true);
-    const onLeave = () => setIsPiP(false);
-    video.addEventListener("enterpictureinpicture", onEnter);
-    video.addEventListener("leavepictureinpicture", onLeave);
-    return () => {
-      video.removeEventListener("enterpictureinpicture", onEnter);
-      video.removeEventListener("leavepictureinpicture", onLeave);
-    };
   }, []);
 
   const testFfmpeg = async () => {
@@ -265,9 +221,7 @@ export default function RTSPViewer({
 
   const startStream = (streamKey: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({ action: "start", stream: streamKey }),
-      );
+      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey }));
       setCurrentStream(streamKey);
     }
   };
@@ -284,97 +238,71 @@ export default function RTSPViewer({
   };
 
   useEffect(() => {
-    return () => {
-      wsRef.current?.close();
-    };
+    return () => { wsRef.current?.close(); };
   }, []);
 
-  const floatBtn =
-    "flex size-8 items-center justify-center rounded-md bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors";
+  const floatBtn = "flex size-8 items-center justify-center rounded-md bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 hover:border hover:border-white transition-colors";
+
+  const videoContent = (onFullscreenToggle: () => void, isFullscreen: boolean) => (
+    <>
+      <canvas ref={canvasRef} className="h-full w-full object-contain" />
+      {!currentStream && (
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+          {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
+        </div>
+      )}
+      <div className="absolute right-3 top-3 flex gap-2">
+        <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
+          {isAlwaysOnTop ? <PinOff className="size-4" /> : <Pin className="size-4" />}
+        </button>
+        <button onClick={onFullscreenToggle} className={floatBtn} title={isFullscreen ? "Sair do fullscreen in-app" : "Fullscreen in-app"}>
+          {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+        </button>
+        <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
+          {isGlobalFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+        </button>
+      </div>
+    </>
+  );
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Video - normal */}
+      <button
+        onClick={() => setIsInfoOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex size-10 items-center justify-center rounded-full border bg-background text-sm font-medium shadow-md hover:bg-muted transition-colors"
+        title="Informacoes da camera"
+      >
+        ?
+      </button>
       {!isInAppFullscreen && (
         <div ref={videoContainerRef} className="relative w-full aspect-video overflow-hidden rounded-xl border bg-black">
-          <canvas ref={canvasRef} className="h-full w-full object-contain" />
-          <video ref={videoRef} className="hidden" muted playsInline />
-          {!currentStream && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-              {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
-            </div>
-          )}
-          {currentStream && (
-            <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
-              <div className="size-1.5 animate-pulse rounded-full bg-white" />
-              AO VIVO — {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
-            </div>
-          )}
-          <div className="absolute right-3 top-3 flex gap-2">
-            <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
-              {isAlwaysOnTop ? <PinOff className="size-4" /> : <Pin className="size-4" />}
-            </button>
-            <button onClick={togglePiP} className={floatBtn} title="Picture in Picture">
-              {isPiP ? <PictureInPicture2 className="size-4" /> : <PictureInPicture className="size-4" />}
-            </button>
-            <button onClick={toggleInAppFullscreen} className={floatBtn} title="Fullscreen in-app">
-              <Maximize2 className="size-4" />
-            </button>
-            <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
-              {isGlobalFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-            </button>
-          </div>
+          {videoContent(toggleInAppFullscreen, false)}
         </div>
       )}
 
-      {/* Video - in-app fullscreen via Portal */}
+      <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Informacoes da camera</DialogTitle>
+          </DialogHeader>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li><span className="font-medium text-foreground">IP:</span> 192.168.0.5</li>
+            <li><span className="font-medium text-foreground">Stream 1:</span> Alta qualidade (rtsp://192.168.0.5/stream1)</li>
+            <li><span className="font-medium text-foreground">Stream 2:</span> Baixa qualidade (rtsp://192.168.0.5/stream2)</li>
+          </ul>
+        </DialogContent>
+      </Dialog>
+
       {isInAppFullscreen && createPortal(
         <div
           className="fixed inset-0 z-[9999] overflow-hidden bg-black"
           style={inAppSize ? { width: inAppSize.width, height: inAppSize.height } : undefined}
         >
-          <canvas ref={canvasRef} className="h-full w-full object-contain" />
-          <video ref={videoRef} className="hidden" muted playsInline />
-          {!currentStream && (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-              {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
-            </div>
-          )}
-          {currentStream && (
-            <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
-              <div className="size-1.5 animate-pulse rounded-full bg-white" />
-              AO VIVO — {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
-            </div>
-          )}
-          <div className="absolute right-3 top-3 flex gap-2">
-            <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
-              {isAlwaysOnTop ? <PinOff className="size-4" /> : <Pin className="size-4" />}
-            </button>
-            <button onClick={togglePiP} className={floatBtn} title="Picture in Picture">
-              {isPiP ? <PictureInPicture2 className="size-4" /> : <PictureInPicture className="size-4" />}
-            </button>
-            <button onClick={toggleInAppFullscreen} className={floatBtn} title="Sair do fullscreen in-app">
-              <Minimize2 className="size-4" />
-            </button>
-            <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
-              {isGlobalFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-            </button>
-          </div>
+          {videoContent(toggleInAppFullscreen, true)}
         </div>,
         document.body
       )}
 
-      {/* Info */}
-      <div className="rounded-lg border bg-muted/40 p-4 text-xs text-muted-foreground">
-        <p className="mb-2 font-medium text-foreground">
-          Informacoes da camera
-        </p>
-        <ul className="space-y-1">
-          <li>IP: 192.168.0.5</li>
-          <li>Stream 1: Alta qualidade (rtsp://192.168.0.5/stream1)</li>
-          <li>Stream 2: Baixa qualidade (rtsp://192.168.0.5/stream2)</li>
-        </ul>
-      </div>
     </div>
   );
 }

@@ -170,6 +170,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  button:not(:disabled) {
+    @apply cursor-pointer;
+  }
 }
 /* @import "tailwindcss"; */
 /* @import "tw-animate-css"; */
