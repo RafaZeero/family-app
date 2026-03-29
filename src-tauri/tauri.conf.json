@@ -4,7 +4,7 @@
   "version": "0.0.3",
   "identifier": "com.familia.kidscam",
   "build": {
-    "frontendDist": "view",
+    "frontendDist": "../view/dist",
     "devUrl": "http://localhost:3006",
     "beforeDevCommand": "pnpm run dev",
     "beforeBuildCommand": "pnpm run build"
