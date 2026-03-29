@@ -32,6 +32,15 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Build Go API
+        working-directory: api_go
+        run: go build -o ../src-tauri/binaries/api-go-x86_64-pc-windows-msvc.exe .
+
       - name: Install frontend dependencies
         working-directory: view
         run: pnpm install

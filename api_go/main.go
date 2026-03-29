@@ -7,13 +7,33 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+func findFFmpeg() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return "ffmpeg"
+	}
+	dir := filepath.Dir(exe)
+	name := "ffmpeg"
+	if runtime.GOOS == "windows" {
+		name = "ffmpeg.exe"
+	}
+	bundled := filepath.Join(dir, name)
+	if _, err := os.Stat(bundled); err == nil {
+		return bundled
+	}
+	return "ffmpeg"
+}
 
 const (
 	PORT               = 3005
@@ -204,7 +224,7 @@ func startRTSPStream(streamUrl string, c *Client) *exec.Cmd {
 		"-",
 	}
 
-	cmd := exec.Command("ffmpeg", ffmpegArgs...)
+	cmd := exec.Command(findFFmpeg(), ffmpegArgs...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
