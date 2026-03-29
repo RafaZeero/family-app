@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
-import { Maximize2, Minimize2, PictureInPicture, PictureInPicture2 } from "lucide-react";
+import {
+  Maximize2,
+  Minimize2,
+  PictureInPicture,
+  PictureInPicture2,
+  Pin,
+  PinOff,
+} from "lucide-react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 interface RTSPViewerProps {
   serverUrl?: string;
@@ -17,6 +25,13 @@ export default function RTSPViewer({
   const [isInAppFullscreen, setIsInAppFullscreen] = useState(false);
   const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
+  const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(false);
+
+  const toggleAlwaysOnTop = async () => {
+    const next = !isAlwaysOnTop;
+    await getCurrentWindow().setAlwaysOnTop(next);
+    setIsAlwaysOnTop(next);
+  };
 
   const wsRef = useRef<WebSocket | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -151,7 +166,9 @@ export default function RTSPViewer({
 
   const startStream = (streamKey: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey }));
+      wsRef.current.send(
+        JSON.stringify({ action: "start", stream: streamKey }),
+      );
       setCurrentStream(streamKey);
     }
   };
@@ -168,16 +185,21 @@ export default function RTSPViewer({
   };
 
   useEffect(() => {
-    return () => { wsRef.current?.close(); };
+    return () => {
+      wsRef.current?.close();
+    };
   }, []);
 
-  const floatBtn = "flex size-8 items-center justify-center rounded-md bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors";
+  const floatBtn =
+    "flex size-8 items-center justify-center rounded-md bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors";
 
   return (
     <div className="flex flex-col gap-6">
       {/* Status */}
       <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
-        <div className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
+        <div
+          className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
+        />
         <span className="font-medium">{status}</span>
       </div>
 
@@ -204,7 +226,9 @@ export default function RTSPViewer({
           Testar FFmpeg
         </button>
         {ffmpegInfo && (
-          <span className="self-center text-xs font-mono text-muted-foreground">{ffmpegInfo}</span>
+          <span className="self-center text-xs font-mono text-muted-foreground">
+            {ffmpegInfo}
+          </span>
         )}
       </div>
 
@@ -246,18 +270,10 @@ export default function RTSPViewer({
         ].join(" ")}
       >
         {/* Canvas visivel - renderiza os frames */}
-        <canvas
-          ref={canvasRef}
-          className="h-full w-full object-contain"
-        />
+        <canvas ref={canvasRef} className="h-full w-full object-contain" />
 
         {/* Video oculto - apenas para PiP */}
-        <video
-          ref={videoRef}
-          className="hidden"
-          muted
-          playsInline
-        />
+        <video ref={videoRef} className="hidden" muted playsInline />
 
         {/* Placeholder quando sem stream */}
         {!currentStream && (
@@ -270,27 +286,65 @@ export default function RTSPViewer({
         {currentStream && (
           <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
             <div className="size-1.5 animate-pulse rounded-full bg-white" />
-            AO VIVO — {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
+            AO VIVO —{" "}
+            {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
           </div>
         )}
 
         {/* Botoes flutuantes */}
         <div className="absolute right-3 top-3 flex gap-2">
-          <button onClick={togglePiP} className={floatBtn} title="Picture in Picture">
-            {isPiP ? <PictureInPicture2 className="size-4" /> : <PictureInPicture className="size-4" />}
+          <button
+            onClick={toggleAlwaysOnTop}
+            className={floatBtn}
+            title="Sempre a frente"
+          >
+            {isAlwaysOnTop ? (
+              <PinOff className="size-4" />
+            ) : (
+              <Pin className="size-4" />
+            )}
           </button>
-          <button onClick={() => setIsInAppFullscreen((v) => !v)} className={floatBtn} title="Fullscreen in-app">
-            {isInAppFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          <button
+            onClick={togglePiP}
+            className={floatBtn}
+            title="Picture in Picture"
+          >
+            {isPiP ? (
+              <PictureInPicture2 className="size-4" />
+            ) : (
+              <PictureInPicture className="size-4" />
+            )}
           </button>
-          <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
-            {isGlobalFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          <button
+            onClick={() => setIsInAppFullscreen((v) => !v)}
+            className={floatBtn}
+            title="Fullscreen in-app"
+          >
+            {isInAppFullscreen ? (
+              <Minimize2 className="size-4" />
+            ) : (
+              <Maximize2 className="size-4" />
+            )}
+          </button>
+          <button
+            onClick={toggleGlobalFullscreen}
+            className={floatBtn}
+            title="Fullscreen global"
+          >
+            {isGlobalFullscreen ? (
+              <Minimize2 className="size-4" />
+            ) : (
+              <Maximize2 className="size-4" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Info */}
       <div className="rounded-lg border bg-muted/40 p-4 text-xs text-muted-foreground">
-        <p className="mb-2 font-medium text-foreground">Informacoes da camera</p>
+        <p className="mb-2 font-medium text-foreground">
+          Informacoes da camera
+        </p>
         <ul className="space-y-1">
           <li>IP: 192.168.0.5</li>
           <li>Stream 1: Alta qualidade (rtsp://192.168.0.5/stream1)</li>
