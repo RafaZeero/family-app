@@ -1,3 +1,5 @@
+import { Layout } from "@/components/layout/layout";
+
 export const SettingsPage = () => {
-  return <div>Settings</div>;
+  return <Layout>Settings</Layout>;
 };

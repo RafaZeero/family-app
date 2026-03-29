@@ -1,3 +1,4 @@
+import { Layout } from "@/components/layout/layout";
 import { Link } from "@tanstack/react-router";
 import { Video, Box, Settings, Bot } from "lucide-react";
 
@@ -32,9 +33,9 @@ const apps = [
   },
 ] as const;
 
-export function HomePage() {
+const AppsSection = () => {
   return (
-    <div className="p-6">
+    <>
       <h1 className="text-xl font-semibold mb-6">Apps</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {apps.map((app) => {
@@ -53,7 +54,9 @@ export function HomePage() {
               </div>
               <div>
                 <p className="text-sm font-medium">{app.title}</p>
-                <p className="text-xs text-muted-foreground">{app.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {app.description}
+                </p>
               </div>
             </div>
           );
@@ -67,6 +70,16 @@ export function HomePage() {
           );
         })}
       </div>
-    </div>
+    </>
+  );
+};
+
+export function HomePage() {
+  return (
+    <Layout>
+      <div className="p-6">
+        <AppsSection />
+      </div>
+    </Layout>
   );
 }
