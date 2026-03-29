@@ -11,8 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppsRouteRouteImport } from './routes/_apps/route'
 import { Route as AppsIndexRouteImport } from './routes/_apps/index'
-import { Route as AppsSettingsRouteImport } from './routes/_apps/settings'
-import { Route as AppsLiveFeedRouteImport } from './routes/_apps/live-feed'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -23,6 +21,8 @@ import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as AppsKidsCamSettingsRouteImport } from './routes/_apps/kids-cam/settings'
+import { Route as AppsKidsCamLiveFeedRouteImport } from './routes/_apps/kids-cam/live-feed'
 
 const AppsRouteRoute = AppsRouteRouteImport.update({
   id: '/_apps',
@@ -31,16 +31,6 @@ const AppsRouteRoute = AppsRouteRouteImport.update({
 const AppsIndexRoute = AppsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppsRouteRoute,
-} as any)
-const AppsSettingsRoute = AppsSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppsRouteRoute,
-} as any)
-const AppsLiveFeedRoute = AppsLiveFeedRouteImport.update({
-  id: '/live-feed',
-  path: '/live-feed',
   getParentRoute: () => AppsRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -93,6 +83,16 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppsKidsCamSettingsRoute = AppsKidsCamSettingsRouteImport.update({
+  id: '/kids-cam/settings',
+  path: '/kids-cam/settings',
+  getParentRoute: () => AppsRouteRoute,
+} as any)
+const AppsKidsCamLiveFeedRoute = AppsKidsCamLiveFeedRouteImport.update({
+  id: '/kids-cam/live-feed',
+  path: '/kids-cam/live-feed',
+  getParentRoute: () => AppsRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppsIndexRoute
@@ -106,8 +106,8 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/live-feed': typeof AppsLiveFeedRoute
-  '/settings': typeof AppsSettingsRoute
+  '/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
+  '/kids-cam/settings': typeof AppsKidsCamSettingsRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
@@ -120,9 +120,9 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/live-feed': typeof AppsLiveFeedRoute
-  '/settings': typeof AppsSettingsRoute
   '/': typeof AppsIndexRoute
+  '/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
+  '/kids-cam/settings': typeof AppsKidsCamSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,9 +137,9 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
-  '/_apps/live-feed': typeof AppsLiveFeedRoute
-  '/_apps/settings': typeof AppsSettingsRoute
   '/_apps/': typeof AppsIndexRoute
+  '/_apps/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
+  '/_apps/kids-cam/settings': typeof AppsKidsCamSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,8 +155,8 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/live-feed'
-    | '/settings'
+    | '/kids-cam/live-feed'
+    | '/kids-cam/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -169,9 +169,9 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/live-feed'
-    | '/settings'
     | '/'
+    | '/kids-cam/live-feed'
+    | '/kids-cam/settings'
   id:
     | '__root__'
     | '/_apps'
@@ -185,9 +185,9 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
-    | '/_apps/live-feed'
-    | '/_apps/settings'
     | '/_apps/'
+    | '/_apps/kids-cam/live-feed'
+    | '/_apps/kids-cam/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -218,20 +218,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppsIndexRouteImport
-      parentRoute: typeof AppsRouteRoute
-    }
-    '/_apps/settings': {
-      id: '/_apps/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppsSettingsRouteImport
-      parentRoute: typeof AppsRouteRoute
-    }
-    '/_apps/live-feed': {
-      id: '/_apps/live-feed'
-      path: '/live-feed'
-      fullPath: '/live-feed'
-      preLoaderRoute: typeof AppsLiveFeedRouteImport
       parentRoute: typeof AppsRouteRoute
     }
     '/(errors)/503': {
@@ -304,19 +290,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_apps/kids-cam/settings': {
+      id: '/_apps/kids-cam/settings'
+      path: '/kids-cam/settings'
+      fullPath: '/kids-cam/settings'
+      preLoaderRoute: typeof AppsKidsCamSettingsRouteImport
+      parentRoute: typeof AppsRouteRoute
+    }
+    '/_apps/kids-cam/live-feed': {
+      id: '/_apps/kids-cam/live-feed'
+      path: '/kids-cam/live-feed'
+      fullPath: '/kids-cam/live-feed'
+      preLoaderRoute: typeof AppsKidsCamLiveFeedRouteImport
+      parentRoute: typeof AppsRouteRoute
+    }
   }
 }
 
 interface AppsRouteRouteChildren {
-  AppsLiveFeedRoute: typeof AppsLiveFeedRoute
-  AppsSettingsRoute: typeof AppsSettingsRoute
   AppsIndexRoute: typeof AppsIndexRoute
+  AppsKidsCamLiveFeedRoute: typeof AppsKidsCamLiveFeedRoute
+  AppsKidsCamSettingsRoute: typeof AppsKidsCamSettingsRoute
 }
 
 const AppsRouteRouteChildren: AppsRouteRouteChildren = {
-  AppsLiveFeedRoute: AppsLiveFeedRoute,
-  AppsSettingsRoute: AppsSettingsRoute,
   AppsIndexRoute: AppsIndexRoute,
+  AppsKidsCamLiveFeedRoute: AppsKidsCamLiveFeedRoute,
+  AppsKidsCamSettingsRoute: AppsKidsCamSettingsRoute,
 }
 
 const AppsRouteRouteWithChildren = AppsRouteRoute._addFileChildren(
