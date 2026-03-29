@@ -1,6 +1,6 @@
-import { LiveFeedPage } from "@/features/apps/kids-cam/live-feed/live-feed";
+import { HomePage } from "@/features/apps/home";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_apps/")({
-  component: LiveFeedPage,
+  component: HomePage,
 });
