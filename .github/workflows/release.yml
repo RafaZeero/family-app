@@ -41,7 +41,7 @@ jobs:
         run: |
           cat > bump.js << 'EOF'
           const fs = require('fs');
-          const v = process.argv[1];
+          const v = process.argv[2];
           const conf = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
           conf.version = v;
           fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
