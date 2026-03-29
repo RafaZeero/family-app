@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useHeaderStore } from "@/stores/header-store";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import {
@@ -28,6 +29,44 @@ export default function RTSPViewer({
   const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(false);
+
+  const { setContent, clearContent } = useHeaderStore();
+
+  useEffect(() => {
+    const btnClass = "rounded-md border px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition-colors";
+    const primaryClass = "rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors";
+
+    setContent(
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 mr-2">
+          <div className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
+          <span className="text-xs text-muted-foreground">{status}</span>
+        </div>
+        <button onClick={connectWebSocket} disabled={isConnected} className={primaryClass}>
+          Conectar
+        </button>
+        <button onClick={disconnect} disabled={!isConnected} className={btnClass}>
+          Desconectar
+        </button>
+        {isConnected && (
+          <>
+            <div className="mx-1 h-4 w-px bg-border" />
+            <button onClick={() => startStream("stream1")} disabled={currentStream === "stream1"} className={primaryClass}>
+              Stream 1
+            </button>
+            <button onClick={() => startStream("stream2")} disabled={currentStream === "stream2"} className={primaryClass}>
+              Stream 2
+            </button>
+            <button onClick={stopStream} disabled={!currentStream} className={btnClass}>
+              Parar
+            </button>
+          </>
+        )}
+      </div>
+    );
+
+    return () => clearContent();
+  }, [isConnected, currentStream, status]);
 
   const toggleAlwaysOnTop = async () => {
     const next = !isAlwaysOnTop;
@@ -234,70 +273,6 @@ export default function RTSPViewer({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Status */}
-      <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
-        <div
-          className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
-        />
-        <span className="font-medium">{status}</span>
-      </div>
-
-      {/* Controles de conexao */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={connectWebSocket}
-          disabled={isConnected}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors"
-        >
-          {isConnected ? "Conectado" : "Conectar"}
-        </button>
-        <button
-          onClick={disconnect}
-          disabled={!isConnected}
-          className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-40 hover:bg-muted transition-colors"
-        >
-          Desconectar
-        </button>
-        <button
-          onClick={testFfmpeg}
-          className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-        >
-          Testar FFmpeg
-        </button>
-        {ffmpegInfo && (
-          <span className="self-center text-xs font-mono text-muted-foreground">
-            {ffmpegInfo}
-          </span>
-        )}
-      </div>
-
-      {/* Controles de stream */}
-      {isConnected && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => startStream("stream1")}
-            disabled={currentStream === "stream1"}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors"
-          >
-            Stream 1 — Alta qualidade
-          </button>
-          <button
-            onClick={() => startStream("stream2")}
-            disabled={currentStream === "stream2"}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors"
-          >
-            Stream 2 — Baixa qualidade
-          </button>
-          <button
-            onClick={stopStream}
-            disabled={!currentStream}
-            className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-40 hover:bg-muted transition-colors"
-          >
-            Parar
-          </button>
-        </div>
-      )}
-
       {/* Video - normal */}
       {!isInAppFullscreen && (
         <div ref={videoContainerRef} className="relative w-full aspect-video overflow-hidden rounded-xl border bg-black">
