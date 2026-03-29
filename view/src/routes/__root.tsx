@@ -5,6 +5,7 @@ import { NavigationProgress } from "@/components/navigation-progress";
 import GeneralError from "@/features/errors/general-error";
 import NotFoundError from "@/features/errors/not-found-error";
 import { Effect } from "effect";
+import { Updater } from "@/components/updater";
 
 type AppContext = {
   runtime: typeof Effect;
@@ -15,6 +16,7 @@ export const Route = createRootRouteWithContext<AppContext>()({
     return (
       <>
         <NavigationProgress />
+        <Updater />
         <Outlet />
         <Toaster duration={50000} closeButton />
         {/* {import.meta.env.MODE === "development" && ( */}

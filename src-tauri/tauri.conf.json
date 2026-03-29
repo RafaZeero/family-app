@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "kids-cam",
+  "productName": "Kids Cam",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.familia.kidscam",
   "build": {
     "frontendDist": "view",
     "devUrl": "http://localhost:3006",
@@ -25,7 +25,19 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU1QTY3QjJCMUE4NzAzOEQKUldTTkE0Y2FLM3VtVlRRSzlxRVU1dU5VdkxzVjZlcEI1dGZzYThjRW1vMHpQaERJckdJS21HSnMK",
+      "endpoints": [
+        "https://github.com/RafaZeero/family-app/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "bundle": {
+    "createUpdaterArtifacts": true,
     "active": true,
     "targets": "all",
     "externalBin": [
@@ -37,6 +49,16 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      },
+      "nsis": {
+        "displayLanguageSelector": false,
+        "languages": ["PortugueseBR"],
+        "installMode": "currentUser"
+      }
+    }
   }
 }
