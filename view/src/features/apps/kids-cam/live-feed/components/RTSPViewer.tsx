@@ -67,6 +67,27 @@ export default function RTSPViewer({
     video.play().catch(() => {});
   }, []);
 
+  // Atualiza inAppSize quando a janela for redimensionada ou mudar de monitor (DPI)
+  useEffect(() => {
+    if (!isInAppFullscreen) return;
+
+    const win = getCurrentWindow();
+
+    const updateSize = async () => {
+      const physical = await win.innerSize();
+      const scale = await win.scaleFactor();
+      setInAppSize({ width: physical.width / scale, height: physical.height / scale });
+    };
+
+    const unlistenResized = win.onResized(updateSize);
+    const unlistenScale = win.onScaleChanged(updateSize);
+
+    return () => {
+      unlistenResized.then((fn) => fn());
+      unlistenScale.then((fn) => fn());
+    };
+  }, [isInAppFullscreen]);
+
   // Desenha cada frame recebido no canvas
   const drawFrame = (base64: string) => {
     const canvas = canvasRef.current;
