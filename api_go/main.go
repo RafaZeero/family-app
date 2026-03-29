@@ -27,9 +27,11 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	id   string
-	conn *websocket.Conn
-	send chan []byte
+	id      string
+	conn    *websocket.Conn
+	send    chan []byte
+	cmd     *exec.Cmd
+	cmdLock sync.Mutex
 }
 
 type Manager struct {
@@ -38,6 +40,15 @@ type Manager struct {
 	unregister chan *Client
 	broadcast  chan []byte
 	mu         sync.RWMutex
+}
+
+func (c *Client) stopStream() {
+	c.cmdLock.Lock()
+	defer c.cmdLock.Unlock()
+	if c.cmd != nil && c.cmd.Process != nil {
+		c.cmd.Process.Kill()
+		c.cmd = nil
+	}
 }
 
 func NewManager() *Manager {
@@ -99,6 +110,7 @@ type WSPayload struct {
 
 func (c *Client) readPump(m *Manager) {
 	defer func() {
+		c.stopStream()
 		m.unregister <- c
 		c.conn.Close()
 	}()
@@ -115,14 +127,18 @@ func (c *Client) readPump(m *Manager) {
 
 		if err := json.Unmarshal(msg, &wsPayload); err != nil {
 			log.Println("Erro parsing data")
-			break
+			continue
 		}
 
-		cmd := startRTSPStream(wsPayload.Stream, c)
-		defer cmd.Process.Kill()
-
-		// exemplo: rebroadcast
-		m.broadcast <- msg
+		switch wsPayload.Action {
+		case "start":
+			c.stopStream()
+			c.cmd = startRTSPStream(wsPayload.Stream, c)
+		case "stop":
+			c.stopStream()
+		default:
+			log.Printf("action desconhecida: %s", wsPayload.Action)
+		}
 	}
 }
 

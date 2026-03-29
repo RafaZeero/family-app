@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import { Maximize2, Minimize2, Pin, PinOff } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import idleImg from "@/assets/kids-cam-idle.png";
 import {
   Dialog,
   DialogContent,
@@ -247,9 +248,11 @@ export default function RTSPViewer({
     <>
       <canvas ref={canvasRef} className="h-full w-full object-contain" />
       {!currentStream && (
-        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-          {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
-        </div>
+        <img
+          src={idleImg}
+          alt="idle"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       )}
       <div className="absolute right-3 top-3 flex gap-2">
         <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
