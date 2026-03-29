@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Kids Cam",
-  "version": "0.1.0",
+  "version": "D:\\a\\family-app\\family-app\\bump.js",
   "identifier": "com.familia.kidscam",
   "build": {
     "frontendDist": "view",
@@ -56,7 +56,9 @@
       },
       "nsis": {
         "displayLanguageSelector": false,
-        "languages": ["PortugueseBR"],
+        "languages": [
+          "PortugueseBR"
+        ],
         "installMode": "currentUser"
       }
     }
