@@ -79,7 +79,7 @@ export function NavMain() {
       <SidebarGroupLabel>Apps</SidebarGroupLabel>
       <SidebarMenu>
         {navItems.map((item) => (
-          <>
+          <div key={item.title}>
             {item.items.length === 0 ? (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip={item.title}>
@@ -134,7 +134,7 @@ export function NavMain() {
                 </SidebarMenuItem>
               </Collapsible>
             )}
-          </>
+          </div>
         ))}
       </SidebarMenu>
     </SidebarGroup>
