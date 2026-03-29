@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "D:\a\family-app\family-app\bump.js"
+version = "0.0.2"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
