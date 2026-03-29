@@ -12,6 +12,13 @@ import {
   PinOff,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface RTSPViewerProps {
   serverUrl?: string;
@@ -29,6 +36,7 @@ export default function RTSPViewer({
   const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(false);
+  const [selectedStream, setSelectedStream] = useState<"stream1" | "stream2">("stream1");
 
   const { setContent, clearContent } = useHeaderStore();
 
@@ -38,24 +46,37 @@ export default function RTSPViewer({
 
     setContent(
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 mr-2">
+        <div className="flex items-center gap-1.5">
           <div className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
-          <span className="text-xs text-muted-foreground">{status}</span>
+          <span className="hidden sm:inline text-xs text-muted-foreground">{status}</span>
         </div>
-        <button onClick={connectWebSocket} disabled={isConnected} className={primaryClass}>
-          Conectar
-        </button>
-        <button onClick={disconnect} disabled={!isConnected} className={btnClass}>
-          Desconectar
-        </button>
+        {isConnected ? (
+          <button onClick={disconnect} className={btnClass}>
+            Desconectar
+          </button>
+        ) : (
+          <button onClick={connectWebSocket} className={primaryClass}>
+            Conectar
+          </button>
+        )}
         {isConnected && (
           <>
             <div className="mx-1 h-4 w-px bg-border" />
-            <button onClick={() => startStream("stream1")} disabled={currentStream === "stream1"} className={primaryClass}>
-              Stream 1
-            </button>
-            <button onClick={() => startStream("stream2")} disabled={currentStream === "stream2"} className={primaryClass}>
-              Stream 2
+            <Select value={selectedStream} onValueChange={(v) => setSelectedStream(v as "stream1" | "stream2")}>
+              <SelectTrigger className="h-7 w-28 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="stream1">Stream 1</SelectItem>
+                <SelectItem value="stream2">Stream 2</SelectItem>
+              </SelectContent>
+            </Select>
+            <button
+              onClick={() => startStream(selectedStream)}
+              disabled={currentStream === selectedStream}
+              className={primaryClass}
+            >
+              {currentStream ? "Trocar" : "Iniciar"}
             </button>
             <button onClick={stopStream} disabled={!currentStream} className={btnClass}>
               Parar
@@ -66,7 +87,7 @@ export default function RTSPViewer({
     );
 
     return () => clearContent();
-  }, [isConnected, currentStream, status]);
+  }, [isConnected, currentStream, status, selectedStream]);
 
   const toggleAlwaysOnTop = async () => {
     const next = !isAlwaysOnTop;
