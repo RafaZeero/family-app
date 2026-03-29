@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
 
 interface RTSPViewerProps {
   serverUrl?: string;
@@ -11,7 +12,6 @@ export default function RTSPViewer({
   const [ffmpegInfo, setFfmpegInfo] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [currentStream, setCurrentStream] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("Desconectado");
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -22,7 +22,8 @@ export default function RTSPViewer({
       const version = await invoke<string>("ffmpeg_version");
       setFfmpegInfo(version.split("\n")[0]);
     } catch (e) {
-      setFfmpegInfo(`Erro: ${e}`);
+      console.error(e);
+      toast.error(`Erro ao testar FFmpeg`, { position: "top-center" });
     }
   };
 
@@ -33,7 +34,6 @@ export default function RTSPViewer({
       wsRef.current.onopen = () => {
         setIsConnected(true);
         setStatus("Conectado");
-        setError(null);
       };
 
       wsRef.current.onmessage = (event) => {
@@ -50,7 +50,7 @@ export default function RTSPViewer({
               setStatus(data.message);
               break;
             case "error":
-              setError(data.message);
+              toast.error(data.message, { position: "top-center" });
               setStatus("Erro na stream");
               break;
           }
@@ -66,11 +66,11 @@ export default function RTSPViewer({
       };
 
       wsRef.current.onerror = () => {
-        setError("Erro de conexão WebSocket");
+        toast.error("Erro de conexão WebSocket", { position: "top-center" });
         setStatus("Erro de conexão");
       };
     } catch (err) {
-      setError("Falha ao conectar WebSocket");
+      toast.error("Falha ao conectar WebSocket", { position: "top-center" });
     }
   };
 
@@ -80,9 +80,10 @@ export default function RTSPViewer({
 
   const startStream = (streamKey: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey }));
+      wsRef.current.send(
+        JSON.stringify({ action: "start", stream: streamKey }),
+      );
       setCurrentStream(streamKey);
-      setError(null);
     }
   };
 
@@ -104,9 +105,10 @@ export default function RTSPViewer({
     <div className="flex flex-col gap-6">
       {/* Status */}
       <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
-        <div className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
+        <div
+          className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
+        />
         <span className="font-medium">{status}</span>
-        {error && <span className="ml-2 text-destructive">{error}</span>}
       </div>
 
       {/* Controles */}
@@ -132,7 +134,9 @@ export default function RTSPViewer({
           Testar FFmpeg
         </button>
         {ffmpegInfo && (
-          <span className="self-center text-xs font-mono text-muted-foreground">{ffmpegInfo}</span>
+          <span className="self-center text-xs font-mono text-muted-foreground">
+            {ffmpegInfo}
+          </span>
         )}
       </div>
 
@@ -166,25 +170,34 @@ export default function RTSPViewer({
       {/* Video */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-black">
         {currentStream ? (
-          <img ref={imgRef} alt="RTSP Stream" className="h-full w-full object-contain" />
+          <img
+            ref={imgRef}
+            alt="RTSP Stream"
+            className="h-full w-full object-contain"
+          />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <span className="text-sm">
-              {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
+              {isConnected
+                ? "Selecione uma stream acima"
+                : "Conecte-se primeiro"}
             </span>
           </div>
         )}
         {currentStream && (
           <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
             <div className="size-1.5 animate-pulse rounded-full bg-white" />
-            AO VIVO — {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
+            AO VIVO —{" "}
+            {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
           </div>
         )}
       </div>
 
       {/* Info */}
       <div className="rounded-lg border bg-muted/40 p-4 text-xs text-muted-foreground">
-        <p className="mb-2 font-medium text-foreground">Informacoes da camera</p>
+        <p className="mb-2 font-medium text-foreground">
+          Informacoes da camera
+        </p>
         <ul className="space-y-1">
           <li>IP: 192.168.0.5</li>
           <li>Stream 1: Alta qualidade (rtsp://192.168.0.5/stream1)</li>

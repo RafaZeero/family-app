@@ -16,7 +16,7 @@ export const Route = createRootRouteWithContext<AppContext>()({
       <>
         <NavigationProgress />
         <Outlet />
-        <Toaster duration={50000} />
+        <Toaster duration={50000} closeButton />
         {/* {import.meta.env.MODE === "development" && ( */}
         {/*   <TanStackRouterDevtools position="bottom-right" /> */}
         {/* )} */}
