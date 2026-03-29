@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import {
@@ -23,6 +24,7 @@ export default function RTSPViewer({
   const [currentStream, setCurrentStream] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("Desconectado");
   const [isInAppFullscreen, setIsInAppFullscreen] = useState(false);
+  const [inAppSize, setInAppSize] = useState<{ width: number; height: number } | null>(null);
   const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(false);
@@ -31,6 +33,22 @@ export default function RTSPViewer({
     const next = !isAlwaysOnTop;
     await getCurrentWindow().setAlwaysOnTop(next);
     setIsAlwaysOnTop(next);
+  };
+
+  const toggleInAppFullscreen = async () => {
+    if (!isInAppFullscreen) {
+      const win = getCurrentWindow();
+      const physical = await win.innerSize();
+      const scale = await win.scaleFactor();
+      setInAppSize({
+        width: physical.width / scale,
+        height: physical.height / scale,
+      });
+      setIsInAppFullscreen(true);
+    } else {
+      setIsInAppFullscreen(false);
+      setInAppSize(null);
+    }
   };
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -259,86 +277,75 @@ export default function RTSPViewer({
         </div>
       )}
 
-      {/* Video */}
-      <div
-        ref={videoContainerRef}
-        className={[
-          "relative w-full overflow-hidden rounded-xl border bg-black",
-          isInAppFullscreen
-            ? "fixed inset-0 z-50 rounded-none border-none aspect-auto"
-            : "aspect-video",
-        ].join(" ")}
-      >
-        {/* Canvas visivel - renderiza os frames */}
-        <canvas ref={canvasRef} className="h-full w-full object-contain" />
-
-        {/* Video oculto - apenas para PiP */}
-        <video ref={videoRef} className="hidden" muted playsInline />
-
-        {/* Placeholder quando sem stream */}
-        {!currentStream && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-            {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
-          </div>
-        )}
-
-        {/* Badge AO VIVO */}
-        {currentStream && (
-          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
-            <div className="size-1.5 animate-pulse rounded-full bg-white" />
-            AO VIVO —{" "}
-            {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
-          </div>
-        )}
-
-        {/* Botoes flutuantes */}
-        <div className="absolute right-3 top-3 flex gap-2">
-          <button
-            onClick={toggleAlwaysOnTop}
-            className={floatBtn}
-            title="Sempre a frente"
-          >
-            {isAlwaysOnTop ? (
-              <PinOff className="size-4" />
-            ) : (
-              <Pin className="size-4" />
-            )}
-          </button>
-          <button
-            onClick={togglePiP}
-            className={floatBtn}
-            title="Picture in Picture"
-          >
-            {isPiP ? (
-              <PictureInPicture2 className="size-4" />
-            ) : (
-              <PictureInPicture className="size-4" />
-            )}
-          </button>
-          <button
-            onClick={() => setIsInAppFullscreen((v) => !v)}
-            className={floatBtn}
-            title="Fullscreen in-app"
-          >
-            {isInAppFullscreen ? (
-              <Minimize2 className="size-4" />
-            ) : (
+      {/* Video - normal */}
+      {!isInAppFullscreen && (
+        <div ref={videoContainerRef} className="relative w-full aspect-video overflow-hidden rounded-xl border bg-black">
+          <canvas ref={canvasRef} className="h-full w-full object-contain" />
+          <video ref={videoRef} className="hidden" muted playsInline />
+          {!currentStream && (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+              {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
+            </div>
+          )}
+          {currentStream && (
+            <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
+              <div className="size-1.5 animate-pulse rounded-full bg-white" />
+              AO VIVO — {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
+            </div>
+          )}
+          <div className="absolute right-3 top-3 flex gap-2">
+            <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
+              {isAlwaysOnTop ? <PinOff className="size-4" /> : <Pin className="size-4" />}
+            </button>
+            <button onClick={togglePiP} className={floatBtn} title="Picture in Picture">
+              {isPiP ? <PictureInPicture2 className="size-4" /> : <PictureInPicture className="size-4" />}
+            </button>
+            <button onClick={toggleInAppFullscreen} className={floatBtn} title="Fullscreen in-app">
               <Maximize2 className="size-4" />
-            )}
-          </button>
-          <button
-            onClick={toggleGlobalFullscreen}
-            className={floatBtn}
-            title="Fullscreen global"
-          >
-            {isGlobalFullscreen ? (
-              <Minimize2 className="size-4" />
-            ) : (
-              <Maximize2 className="size-4" />
-            )}
-          </button>
+            </button>
+            <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
+              {isGlobalFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Video - in-app fullscreen via Portal */}
+      {isInAppFullscreen && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] overflow-hidden bg-black"
+          style={inAppSize ? { width: inAppSize.width, height: inAppSize.height } : undefined}
+        >
+          <canvas ref={canvasRef} className="h-full w-full object-contain" />
+          <video ref={videoRef} className="hidden" muted playsInline />
+          {!currentStream && (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+              {isConnected ? "Selecione uma stream acima" : "Conecte-se primeiro"}
+            </div>
+          )}
+          {currentStream && (
+            <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white">
+              <div className="size-1.5 animate-pulse rounded-full bg-white" />
+              AO VIVO — {currentStream === "stream1" ? "Alta qualidade" : "Baixa qualidade"}
+            </div>
+          )}
+          <div className="absolute right-3 top-3 flex gap-2">
+            <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
+              {isAlwaysOnTop ? <PinOff className="size-4" /> : <Pin className="size-4" />}
+            </button>
+            <button onClick={togglePiP} className={floatBtn} title="Picture in Picture">
+              {isPiP ? <PictureInPicture2 className="size-4" /> : <PictureInPicture className="size-4" />}
+            </button>
+            <button onClick={toggleInAppFullscreen} className={floatBtn} title="Sair do fullscreen in-app">
+              <Minimize2 className="size-4" />
+            </button>
+            <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
+              {isGlobalFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Info */}
       <div className="rounded-lg border bg-muted/40 p-4 text-xs text-muted-foreground">
