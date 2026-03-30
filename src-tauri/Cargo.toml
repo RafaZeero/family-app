@@ -2,7 +2,7 @@
 name = "app"
 version = "0.0.5"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["Rafael Lima gh:@RafaZeero linkedin:@rafael99ldm"]
 license = ""
 repository = ""
 edition = "2021"
