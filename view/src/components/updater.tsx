@@ -19,7 +19,7 @@ export function Updater() {
           },
         });
       })
-      .catch(console.error);
+      .catch((err) => toast.error(`Erro ao verificar atualizacao: ${err}`));
   }, []);
 
   return null;

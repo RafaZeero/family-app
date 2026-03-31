@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useHeaderStore } from "@/stores/header-store";
-import { invoke } from "@tauri-apps/api/core";
+import { useCameraStore } from "@/stores/camera-store";
 import { toast } from "sonner";
-import { Maximize2, Minimize2, Pin, PinOff } from "lucide-react";
+import { Circle, Maximize2, Minimize2, Pin, PinOff, Play, Power, RefreshCw, Square, Video } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import idleImg from "@/assets/kids-cam-idle.png";
 import {
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { NoConfigModal } from "./no-config-modal";
 import {
   Select,
   SelectContent,
@@ -20,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type StreamState = "idle" | "playing" | "stopped";
+
 interface RTSPViewerProps {
   serverUrl?: string;
 }
@@ -27,68 +30,185 @@ interface RTSPViewerProps {
 export default function RTSPViewer({
   serverUrl = "ws://localhost:3005/?auth_conn=123",
 }: RTSPViewerProps) {
-  const [ffmpegInfo, setFfmpegInfo] = useState<string | null>(null);
+  const { ip } = useCameraStore();
   const [isConnected, setIsConnected] = useState(false);
+  const [streamState, setStreamState] = useState<StreamState>("idle");
   const [currentStream, setCurrentStream] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("Desconectado");
   const [isInAppFullscreen, setIsInAppFullscreen] = useState(false);
   const [inAppSize, setInAppSize] = useState<{ width: number; height: number } | null>(null);
   const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(false);
   const [selectedStream, setSelectedStream] = useState<"stream1" | "stream2">("stream1");
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isNoConfigOpen, setIsNoConfigOpen] = useState(false);
 
-  const { setContent, clearContent } = useHeaderStore();
+  const { setContent, clearContent, setBadge, clearBadge } = useHeaderStore();
 
+  const wsRef = useRef<WebSocket | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+
+  // --- Header: badge ---
   useEffect(() => {
-    const btnClass = "rounded-md border px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition-colors";
-    const primaryClass = "rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors";
+    if (streamState === "playing") {
+      setBadge(
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-100 shrink-0">
+          <Circle size={6} fill="currentColor" />
+          ON
+        </span>,
+      );
+    } else if (streamState === "stopped") {
+      setBadge(
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 text-[9px] font-bold border border-red-100 shrink-0">
+          <Circle size={6} fill="currentColor" />
+          OFF
+        </span>,
+      );
+    } else {
+      clearBadge();
+    }
+    return () => clearBadge();
+  }, [streamState]);
+
+  // --- Header: controls ---
+  useEffect(() => {
+    const iconBtn = "p-1.5 rounded-md transition-all disabled:opacity-40";
+
+    if (!isConnected) {
+      setContent(
+        <button
+          onClick={connectWebSocket}
+          className={`${iconBtn} bg-primary text-primary-foreground hover:bg-primary/90`}
+          title="Conectar"
+        >
+          <Power size={15} />
+        </button>,
+      );
+      return () => clearContent();
+    }
+
+    const streamChanged = currentStream !== null && selectedStream !== currentStream;
 
     setContent(
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <div className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
-          <span className="hidden sm:inline text-xs text-muted-foreground">{status}</span>
-        </div>
-        {isConnected ? (
-          <button onClick={disconnect} className={btnClass}>
-            Desconectar
+      <div className="flex items-center gap-1.5">
+        {streamChanged && (
+          <button
+            onClick={() => startStream(selectedStream)}
+            className={`${iconBtn} text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600`}
+            title="Trocar stream"
+          >
+            <RefreshCw size={15} />
+          </button>
+        )}
+
+        <Select
+          value={selectedStream}
+          onValueChange={(v) => setSelectedStream(v as "stream1" | "stream2")}
+        >
+          <SelectTrigger className="h-8 w-32 text-xs gap-1.5">
+            <Video size={13} className="text-muted-foreground shrink-0" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="stream1">Stream 1</SelectItem>
+            <SelectItem value="stream2">Stream 2</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {streamState === "playing" ? (
+          <button
+            onClick={stopStream}
+            className={`${iconBtn} text-rose-500 hover:bg-rose-50`}
+            title="Parar"
+          >
+            <Square size={15} fill="currentColor" />
           </button>
         ) : (
-          <button onClick={connectWebSocket} className={primaryClass}>
-            Conectar
+          <button
+            onClick={() => startStream(selectedStream)}
+            className={`${iconBtn} bg-primary text-primary-foreground hover:bg-primary/90`}
+            title="Play"
+          >
+            <Play size={15} fill="currentColor" />
           </button>
         )}
-        {isConnected && (
-          <>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Select value={selectedStream} onValueChange={(v) => setSelectedStream(v as "stream1" | "stream2")}>
-              <SelectTrigger className="h-7 w-28 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="stream1">Stream 1</SelectItem>
-                <SelectItem value="stream2">Stream 2</SelectItem>
-              </SelectContent>
-            </Select>
-            <button
-              onClick={() => startStream(selectedStream)}
-              disabled={currentStream === selectedStream}
-              className={primaryClass}
-            >
-              {currentStream ? "Trocar" : "Iniciar"}
-            </button>
-            <button onClick={stopStream} disabled={!currentStream} className={btnClass}>
-              Parar
-            </button>
-          </>
-        )}
-      </div>
+      </div>,
     );
 
     return () => clearContent();
-  }, [isConnected, currentStream, status, selectedStream]);
+  }, [isConnected, streamState, currentStream, selectedStream, ip]);
 
+  // --- WebSocket ---
+  const connectWebSocket = () => {
+    if (!ip) {
+      setIsNoConfigOpen(true);
+      return;
+    }
+
+    try {
+      wsRef.current = new WebSocket(serverUrl);
+
+      wsRef.current.onopen = () => {
+        setIsConnected(true);
+      };
+
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          switch (data.type) {
+            case "frame":
+              drawFrame(data.data);
+              break;
+            case "error":
+              toast.error(data.message);
+              break;
+          }
+        } catch (err) {
+          console.error("Erro ao processar mensagem WebSocket:", err);
+        }
+      };
+
+      wsRef.current.onclose = () => {
+        setIsConnected(false);
+        setStreamState("idle");
+        setCurrentStream(null);
+      };
+
+      wsRef.current.onerror = () => {
+        toast.error("Erro de conexao WebSocket");
+      };
+    } catch {
+      toast.error("Falha ao conectar WebSocket");
+    }
+  };
+
+  const startStream = (streamKey: string) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey, ip }));
+      setCurrentStream(streamKey);
+      setStreamState("playing");
+    }
+  };
+
+  const stopStream = () => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: "stop" }));
+      setCurrentStream(null);
+      setStreamState("stopped");
+      const ctx = canvasRef.current?.getContext("2d");
+      if (ctx && canvasRef.current) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => wsRef.current?.close();
+  }, []);
+
+  // --- Fullscreen ---
   const toggleAlwaysOnTop = async () => {
     const next = !isAlwaysOnTop;
     await getCurrentWindow().setAlwaysOnTop(next);
@@ -108,48 +228,22 @@ export default function RTSPViewer({
     }
   };
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoContainerRef = useRef<HTMLDivElement>(null);
-
-  // Atualiza inAppSize quando a janela for redimensionada ou mudar de monitor (DPI)
   useEffect(() => {
     if (!isInAppFullscreen) return;
-
     const win = getCurrentWindow();
-
     const updateSize = async () => {
       const physical = await win.innerSize();
       const scale = await win.scaleFactor();
       setInAppSize({ width: physical.width / scale, height: physical.height / scale });
     };
-
     const unlistenResized = win.onResized(updateSize);
     const unlistenScale = win.onScaleChanged(updateSize);
-
     return () => {
       unlistenResized.then((fn) => fn());
       unlistenScale.then((fn) => fn());
     };
   }, [isInAppFullscreen]);
 
-  // Desenha cada frame recebido no canvas
-  const drawFrame = (base64: string) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0);
-    };
-    img.src = `data:image/jpeg;base64,${base64}`;
-  };
-
-  // Fullscreen global (OS-level)
   const toggleGlobalFullscreen = () => {
     if (!isGlobalFullscreen) {
       videoContainerRef.current?.requestFullscreen();
@@ -164,90 +258,29 @@ export default function RTSPViewer({
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
-  const testFfmpeg = async () => {
-    try {
-      const version = await invoke<string>("ffmpeg_version");
-      setFfmpegInfo(version.split("\n")[0]);
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao testar FFmpeg");
-    }
+  // --- Canvas ---
+  const drawFrame = (base64: string) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = `data:image/jpeg;base64,${base64}`;
   };
 
-  const connectWebSocket = () => {
-    try {
-      wsRef.current = new WebSocket(serverUrl);
-
-      wsRef.current.onopen = () => {
-        setIsConnected(true);
-        setStatus("Conectado");
-      };
-
-      wsRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          switch (data.type) {
-            case "frame":
-              drawFrame(data.data);
-              break;
-            case "status":
-              setStatus(data.message);
-              break;
-            case "error":
-              toast.error(data.message);
-              setStatus("Erro na stream");
-              break;
-          }
-        } catch (err) {
-          console.error("Erro ao processar mensagem WebSocket:", err);
-        }
-      };
-
-      wsRef.current.onclose = () => {
-        setIsConnected(false);
-        setCurrentStream(null);
-        setStatus("Desconectado");
-      };
-
-      wsRef.current.onerror = () => {
-        toast.error("Erro de conexao WebSocket");
-        setStatus("Erro de conexao");
-      };
-    } catch {
-      toast.error("Falha ao conectar WebSocket");
-    }
-  };
-
-  const disconnect = () => wsRef.current?.close();
-
-  const startStream = (streamKey: string) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey }));
-      setCurrentStream(streamKey);
-    }
-  };
-
-  const stopStream = () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: "stop" }));
-      setCurrentStream(null);
-      const ctx = canvasRef.current?.getContext("2d");
-      if (ctx && canvasRef.current) {
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      }
-    }
-  };
-
-  useEffect(() => {
-    return () => { wsRef.current?.close(); };
-  }, []);
-
-  const floatBtn = "flex size-8 items-center justify-center rounded-md bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 hover:border hover:border-white transition-colors";
+  // --- Render ---
+  const floatBtn =
+    "flex size-8 items-center justify-center rounded-md bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 hover:border hover:border-white transition-colors";
 
   const videoContent = (onFullscreenToggle: () => void, isFullscreen: boolean) => (
     <>
       <canvas ref={canvasRef} className="h-full w-full object-contain" />
-      {!currentStream && (
+      {streamState !== "playing" && (
         <img
           src={idleImg}
           alt="idle"
@@ -258,7 +291,11 @@ export default function RTSPViewer({
         <button onClick={toggleAlwaysOnTop} className={floatBtn} title="Sempre a frente">
           {isAlwaysOnTop ? <PinOff className="size-4" /> : <Pin className="size-4" />}
         </button>
-        <button onClick={onFullscreenToggle} className={floatBtn} title={isFullscreen ? "Sair do fullscreen in-app" : "Fullscreen in-app"}>
+        <button
+          onClick={onFullscreenToggle}
+          className={floatBtn}
+          title={isFullscreen ? "Sair do fullscreen in-app" : "Fullscreen in-app"}
+        >
           {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
         </button>
         <button onClick={toggleGlobalFullscreen} className={floatBtn} title="Fullscreen global">
@@ -277,8 +314,12 @@ export default function RTSPViewer({
       >
         ?
       </button>
+
       {!isInAppFullscreen && (
-        <div ref={videoContainerRef} className="relative w-full aspect-video overflow-hidden rounded-xl border bg-black">
+        <div
+          ref={videoContainerRef}
+          className="relative w-full aspect-video overflow-hidden rounded-xl border bg-black"
+        >
           {videoContent(toggleInAppFullscreen, false)}
         </div>
       )}
@@ -289,23 +330,34 @@ export default function RTSPViewer({
             <DialogTitle>Informacoes da camera</DialogTitle>
           </DialogHeader>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><span className="font-medium text-foreground">IP:</span> 192.168.0.5</li>
-            <li><span className="font-medium text-foreground">Stream 1:</span> Alta qualidade (rtsp://192.168.0.5/stream1)</li>
-            <li><span className="font-medium text-foreground">Stream 2:</span> Baixa qualidade (rtsp://192.168.0.5/stream2)</li>
+            <li>
+              <span className="font-medium text-foreground">IP:</span>{" "}
+              {ip || <span className="italic">nao configurado</span>}
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Stream 1:</span>{" "}
+              Alta qualidade{ip ? ` (rtsp://${ip}/stream1)` : ""}
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Stream 2:</span>{" "}
+              Baixa qualidade{ip ? ` (rtsp://${ip}/stream2)` : ""}
+            </li>
           </ul>
         </DialogContent>
       </Dialog>
 
-      {isInAppFullscreen && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] overflow-hidden bg-black"
-          style={inAppSize ? { width: inAppSize.width, height: inAppSize.height } : undefined}
-        >
-          {videoContent(toggleInAppFullscreen, true)}
-        </div>,
-        document.body
-      )}
+      <NoConfigModal open={isNoConfigOpen} onOpenChange={setIsNoConfigOpen} />
 
+      {isInAppFullscreen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] overflow-hidden bg-black"
+            style={inAppSize ? { width: inAppSize.width, height: inAppSize.height } : undefined}
+          >
+            {videoContent(toggleInAppFullscreen, true)}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

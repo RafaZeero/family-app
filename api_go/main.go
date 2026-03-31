@@ -126,6 +126,7 @@ func (c *Client) writePump() {
 type WSPayload struct {
 	Action string `json:"action"`
 	Stream string `json:"stream"`
+	IP     string `json:"ip"`
 }
 
 func (c *Client) readPump(m *Manager) {
@@ -152,8 +153,12 @@ func (c *Client) readPump(m *Manager) {
 
 		switch wsPayload.Action {
 		case "start":
+			ip := wsPayload.IP
+			if ip == "" {
+				ip = IP_ADDR
+			}
 			c.stopStream()
-			c.cmd = startRTSPStream(wsPayload.Stream, c)
+			c.cmd = startRTSPStream(wsPayload.Stream, ip, c)
 		case "stop":
 			c.stopStream()
 		default:
@@ -197,7 +202,7 @@ func wsHandler(m *Manager) http.HandlerFunc {
 	}
 }
 
-func startRTSPStream(streamUrl string, c *Client) *exec.Cmd {
+func startRTSPStream(streamUrl string, ip string, c *Client) *exec.Cmd {
 	var rtspURL string
 
 	if streamUrl == "stream1" {
@@ -206,7 +211,7 @@ func startRTSPStream(streamUrl string, c *Client) *exec.Cmd {
 		rtspURL = RTSP_URL_STREAM_02
 	}
 
-	rtspURL = fmt.Sprintf(rtspURL, IP_ADDR)
+	rtspURL = fmt.Sprintf(rtspURL, ip)
 
 	ffmpegArgs := []string{
 		"-rtsp_transport",
