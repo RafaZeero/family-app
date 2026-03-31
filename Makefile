@@ -2,13 +2,12 @@
 
 # Default target - start both API and Tauri dev
 dev:
-	@echo "Starting Kids Cam development environment..."
+	@echo "Starting Family App development environment..."
 	@$(MAKE) -j2 api tauri
 
 # Start API server
 api:
 	@echo "Starting API server..."
-	# @cd api && pnpm run dev
 	@cd api_go && go run main.go
 
 # Start Tauri development server
@@ -24,13 +23,11 @@ view:
 # Install dependencies
 install:
 	@echo "Installing dependencies..."
-	@cd api && pnpm install
 	@cd view && pnpm install
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	@cd api && rm -rf node_modules
 	@cd view && rm -rf node_modules dist
 	@cd src-tauri && cargo clean
 

@@ -1,4 +1,4 @@
-module kids-cam
+module family-app-server
 
 go 1.25.3
 

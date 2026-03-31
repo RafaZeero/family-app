@@ -28,7 +28,7 @@ interface RTSPViewerProps {
 }
 
 export default function RTSPViewer({
-  serverUrl = "ws://localhost:3005/?auth_conn=123",
+  serverUrl = "ws://localhost:3005/?auth_conn=VdpfcQzI4TSaXn88465ZWP_DRmKdXk19LffV7TEpti0=",
 }: RTSPViewerProps) {
   const { ip } = useCameraStore();
   const [isConnected, setIsConnected] = useState(false);
