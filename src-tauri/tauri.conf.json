@@ -51,6 +51,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "kids-cam.desktop"
+      }
+    },
     "windows": {
       "webviewInstallMode": {
         "type": "embedBootstrapper"
