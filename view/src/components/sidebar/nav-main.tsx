@@ -16,6 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
 
@@ -74,6 +75,8 @@ const navItems = [
 ] as const;
 
 export function NavMain() {
+  const { setOpen, state } = useSidebar();
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Apps</SidebarGroupLabel>
@@ -105,7 +108,10 @@ export function NavMain() {
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title}>
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      onClick={() => state === "collapsed" && setOpen(true)}
+                    >
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
