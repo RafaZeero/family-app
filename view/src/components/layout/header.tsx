@@ -8,12 +8,14 @@ const routeLabels: Record<string, string> = {
   "/": "Home",
   "/kids-cam/live-feed": "Live Feed",
   "/kids-cam/settings": "Settings",
+  "/about": "Sobre",
 };
 
 const routeParents: Record<string, { label: string; to: string } | null> = {
   "/": null,
   "/kids-cam/live-feed": { label: "Kids Cam", to: "/kids-cam/live-feed" },
   "/kids-cam/settings": { label: "Kids Cam", to: "/kids-cam/live-feed" },
+  "/about": null,
 };
 
 export const Header = () => {

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppsRouteRouteImport } from './routes/_apps/route'
 import { Route as AppsIndexRouteImport } from './routes/_apps/index'
+import { Route as AppsAboutRouteImport } from './routes/_apps/about'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -31,6 +32,11 @@ const AppsRouteRoute = AppsRouteRouteImport.update({
 const AppsIndexRoute = AppsIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppsRouteRoute,
+} as any)
+const AppsAboutRoute = AppsAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => AppsRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/about': typeof AppsAboutRoute
   '/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
   '/kids-cam/settings': typeof AppsKidsCamSettingsRoute
 }
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/about': typeof AppsAboutRoute
   '/': typeof AppsIndexRoute
   '/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
   '/kids-cam/settings': typeof AppsKidsCamSettingsRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/_apps/about': typeof AppsAboutRoute
   '/_apps/': typeof AppsIndexRoute
   '/_apps/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
   '/_apps/kids-cam/settings': typeof AppsKidsCamSettingsRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/about'
     | '/kids-cam/live-feed'
     | '/kids-cam/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/about'
     | '/'
     | '/kids-cam/live-feed'
     | '/kids-cam/settings'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/_apps/about'
     | '/_apps/'
     | '/_apps/kids-cam/live-feed'
     | '/_apps/kids-cam/settings'
@@ -218,6 +230,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppsIndexRouteImport
+      parentRoute: typeof AppsRouteRoute
+    }
+    '/_apps/about': {
+      id: '/_apps/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AppsAboutRouteImport
       parentRoute: typeof AppsRouteRoute
     }
     '/(errors)/503': {
@@ -308,12 +327,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppsRouteRouteChildren {
+  AppsAboutRoute: typeof AppsAboutRoute
   AppsIndexRoute: typeof AppsIndexRoute
   AppsKidsCamLiveFeedRoute: typeof AppsKidsCamLiveFeedRoute
   AppsKidsCamSettingsRoute: typeof AppsKidsCamSettingsRoute
 }
 
 const AppsRouteRouteChildren: AppsRouteRouteChildren = {
+  AppsAboutRoute: AppsAboutRoute,
   AppsIndexRoute: AppsIndexRoute,
   AppsKidsCamLiveFeedRoute: AppsKidsCamLiveFeedRoute,
   AppsKidsCamSettingsRoute: AppsKidsCamSettingsRoute,
