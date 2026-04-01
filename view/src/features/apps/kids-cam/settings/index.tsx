@@ -20,7 +20,7 @@ export const SettingsPage = () => {
     const trimmed = value.trim();
     if (!trimmed) return;
     await setIp(trimmed);
-    toast.success("Configuracoes salvas");
+    toast.success("Configurações salvas");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -30,16 +30,16 @@ export const SettingsPage = () => {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-lg space-y-6 p-6">
+      <div className="max-w-lg space-y-6">
         <div>
           <h2 className="text-lg font-semibold">Camera</h2>
           <p className="text-sm text-muted-foreground">
-            Endereco IP da camera RTSP
+            Endereco IP da câmera RTSP
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="camera-ip">IP da camera</Label>
+            <Label htmlFor="camera-ip">IP da câmera</Label>
             <Input
               id="camera-ip"
               placeholder="ex: 192.168.0.5"
@@ -48,7 +48,10 @@ export const SettingsPage = () => {
             />
           </div>
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={value.trim() === ip || !value.trim()}>
+            <Button
+              type="submit"
+              disabled={value.trim() === ip || !value.trim()}
+            >
               Salvar
             </Button>
             {ip && (

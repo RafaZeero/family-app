@@ -10,20 +10,18 @@ export function AboutPage() {
 
   return (
     <Layout>
-      <div className="flex-1 flex p-8">
-        <div className="w-full max-w-md space-y-6">
-          {/* App identity */}
-          <AboutAppIdentity />
+      <div className="flex-1 flex flex-col w-full max-w-md space-y-6">
+        {/* App identity */}
+        <AboutAppIdentity />
 
-          {/* Version info */}
-          <AboutAppVersionInfo version={version} />
+        {/* Version info */}
+        <AboutAppVersionInfo version={version} />
 
-          {/* Update actions */}
-          <AboutUpdateAction />
+        {/* Update actions */}
+        <AboutUpdateAction />
 
-          {/* Footer links */}
-          <AboutFooterLink />
-        </div>
+        {/* Footer links */}
+        <AboutFooterLink />
       </div>
     </Layout>
   );

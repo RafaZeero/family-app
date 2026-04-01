@@ -5,28 +5,28 @@ import { Video, Box, Settings, Bot } from "lucide-react";
 const apps = [
   {
     title: "Kids Cam",
-    description: "Live RTSP camera feed",
+    description: "De olho no soninho deles",
     icon: Video,
     to: "/kids-cam/live-feed",
     available: true,
   },
   {
     title: "App 2",
-    description: "Coming soon",
+    description: "Em breve!",
     icon: Box,
     to: "/",
     available: false,
   },
   {
     title: "App 3",
-    description: "Coming soon",
+    description: "Em breve!",
     icon: Bot,
     to: "/",
     available: false,
   },
   {
     title: "App 4",
-    description: "Coming soon",
+    description: "Em breve!",
     icon: Settings,
     to: "/",
     available: false,
@@ -77,9 +77,7 @@ const AppsSection = () => {
 export function HomePage() {
   return (
     <Layout>
-      <div className="p-6">
-        <AppsSection />
-      </div>
+      <AppsSection />
     </Layout>
   );
 }
