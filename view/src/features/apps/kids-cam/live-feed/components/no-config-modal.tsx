@@ -27,9 +27,9 @@ export function NoConfigModal({ open, onOpenChange }: NoConfigModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Camera nao configurada</DialogTitle>
+          <DialogTitle>Câmera não configurada</DialogTitle>
           <DialogDescription>
-            Defina o IP da camera nas configuracoes antes de conectar.
+            Defina o IP da câmera nas configurações antes de conectar.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

@@ -1,5 +1,5 @@
+import { CardSection } from "@/components/common/card-section";
 import { Layout } from "@/components/layout/layout";
-import { Link } from "@tanstack/react-router";
 import { Video, Box, Settings, Bot } from "lucide-react";
 
 const apps = [
@@ -7,7 +7,7 @@ const apps = [
     title: "Kids Cam",
     description: "De olho no soninho deles",
     icon: Video,
-    to: "/kids-cam/live-feed",
+    to: "/kids-cam",
     available: true,
   },
   {
@@ -36,39 +36,11 @@ const apps = [
 const AppsSection = () => {
   return (
     <>
-      <h1 className="text-xl font-semibold mb-6">Apps</h1>
+      <h1 className="text-xl font-semibold mb-6">Aplicativos</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {apps.map((app) => {
-          const Icon = app.icon;
-          const card = (
-            <div
-              className={[
-                "flex flex-col items-center justify-center gap-3 rounded-xl border p-6 text-center transition-colors",
-                app.available
-                  ? "cursor-pointer hover:bg-muted"
-                  : "cursor-default opacity-40",
-              ].join(" ")}
-            >
-              <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
-                <Icon className="size-8 text-foreground" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{app.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {app.description}
-                </p>
-              </div>
-            </div>
-          );
-
-          return app.available ? (
-            <Link key={app.title} to={app.to} className="block">
-              {card}
-            </Link>
-          ) : (
-            <div key={app.title}>{card}</div>
-          );
-        })}
+        {apps.map((app) => (
+          <CardSection {...app} />
+        ))}
       </div>
     </>
   );

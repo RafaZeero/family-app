@@ -178,7 +178,7 @@ export default function RTSPViewer({
       };
 
       wsRef.current.onerror = () => {
-        toast.error("Erro de conexao WebSocket");
+        toast.error("Erro de conexão WebSocket");
       };
     } catch {
       toast.error("Falha ao conectar WebSocket");
@@ -311,7 +311,7 @@ export default function RTSPViewer({
       <button
         onClick={() => setIsInfoOpen(true)}
         className="fixed bottom-6 right-6 z-40 flex size-10 items-center justify-center rounded-full border bg-background text-sm font-medium shadow-md hover:bg-muted transition-colors"
-        title="Informacoes da camera"
+        title="Informações da câmera"
       >
         ?
       </button>
@@ -328,16 +328,16 @@ export default function RTSPViewer({
       <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Informacoes da camera</DialogTitle>
+            <DialogTitle>Informações da câmera</DialogTitle>
           </DialogHeader>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
               <span className="font-medium text-foreground">IP:</span>{" "}
-              {ip || <span className="italic">nao configurado</span>}
+              {ip || <span className="italic">não configurado</span>}
             </li>
             <li>
-              <span className="font-medium text-foreground">Usuario:</span>{" "}
-              {username || <span className="italic">nao configurado</span>}
+              <span className="font-medium text-foreground">Usuário:</span>{" "}
+              {username || <span className="italic">não configurado</span>}
             </li>
             <li>
               <span className="font-medium text-foreground">Stream 1:</span>{" "}

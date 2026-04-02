@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 
 export const SettingsPage = () => {
-  const { ip, username, password, setIp, setUsername, setPassword } = useCameraStore();
+  const { ip, username, password, setIp, setUsername, setPassword } =
+    useCameraStore();
   const [ipValue, setIpValue] = useState(ip);
   const [usernameValue, setUsernameValue] = useState(username);
   const [passwordValue, setPasswordValue] = useState(password);
@@ -45,9 +46,9 @@ export const SettingsPage = () => {
     <Layout>
       <div className="max-w-lg space-y-6">
         <div>
-          <h2 className="text-lg font-semibold">Camera</h2>
+          <h2 className="text-lg font-semibold">Configurações do feed</h2>
           <p className="text-sm text-muted-foreground">
-            Endereco IP da câmera RTSP
+            Credenciais de acesso à câmera RTSP
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,7 +62,7 @@ export const SettingsPage = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="camera-username">Usuario</Label>
+            <Label htmlFor="camera-username">Usuário</Label>
             <Input
               id="camera-username"
               placeholder="ex: admin"
@@ -91,10 +92,7 @@ export const SettingsPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              type="submit"
-              disabled={!hasChanges || !ipValue.trim()}
-            >
+            <Button type="submit" disabled={!hasChanges || !ipValue.trim()}>
               Salvar
             </Button>
             {ip && (

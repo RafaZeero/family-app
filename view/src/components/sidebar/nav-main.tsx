@@ -35,11 +35,11 @@ const navItems = [
     isActive: false,
     items: [
       {
-        title: "Live Feed",
+        title: "Ao vivo",
         url: "/kids-cam/live-feed",
       },
       {
-        title: "Settings",
+        title: "Configurações",
         url: "/kids-cam/settings",
       },
     ],

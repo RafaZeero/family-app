@@ -6,15 +6,17 @@ import { ChevronRight } from "lucide-react";
 
 const routeLabels: Record<string, string> = {
   "/": "Home",
-  "/kids-cam/live-feed": "Live Feed",
-  "/kids-cam/settings": "Settings",
+  "/kids-cam": "Kids Cam",
+  "/kids-cam/live-feed": "Ao vivo",
+  "/kids-cam/settings": "Configurações",
   "/about": "Sobre",
 };
 
 const routeParents: Record<string, { label: string; to: string } | null> = {
   "/": null,
-  "/kids-cam/live-feed": { label: "Kids Cam", to: "/kids-cam/live-feed" },
-  "/kids-cam/settings": { label: "Kids Cam", to: "/kids-cam/live-feed" },
+  "/kids-cam": null,
+  "/kids-cam/live-feed": { label: "Kids Cam", to: "/kids-cam" },
+  "/kids-cam/settings": { label: "Kids Cam", to: "/kids-cam" },
   "/about": null,
 };
 

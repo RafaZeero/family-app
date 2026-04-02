@@ -22,6 +22,7 @@ import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as AppsKidsCamIndexRouteImport } from './routes/_apps/kids-cam/index'
 import { Route as AppsKidsCamSettingsRouteImport } from './routes/_apps/kids-cam/settings'
 import { Route as AppsKidsCamLiveFeedRouteImport } from './routes/_apps/kids-cam/live-feed'
 
@@ -89,6 +90,11 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppsKidsCamIndexRoute = AppsKidsCamIndexRouteImport.update({
+  id: '/kids-cam/',
+  path: '/kids-cam/',
+  getParentRoute: () => AppsRouteRoute,
+} as any)
 const AppsKidsCamSettingsRoute = AppsKidsCamSettingsRouteImport.update({
   id: '/kids-cam/settings',
   path: '/kids-cam/settings',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AppsAboutRoute
   '/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
   '/kids-cam/settings': typeof AppsKidsCamSettingsRoute
+  '/kids-cam/': typeof AppsKidsCamIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/': typeof AppsIndexRoute
   '/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
   '/kids-cam/settings': typeof AppsKidsCamSettingsRoute
+  '/kids-cam': typeof AppsKidsCamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/_apps/': typeof AppsIndexRoute
   '/_apps/kids-cam/live-feed': typeof AppsKidsCamLiveFeedRoute
   '/_apps/kids-cam/settings': typeof AppsKidsCamSettingsRoute
+  '/_apps/kids-cam/': typeof AppsKidsCamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/kids-cam/live-feed'
     | '/kids-cam/settings'
+    | '/kids-cam/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/kids-cam/live-feed'
     | '/kids-cam/settings'
+    | '/kids-cam'
   id:
     | '__root__'
     | '/_apps'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/_apps/'
     | '/_apps/kids-cam/live-feed'
     | '/_apps/kids-cam/settings'
+    | '/_apps/kids-cam/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -309,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_apps/kids-cam/': {
+      id: '/_apps/kids-cam/'
+      path: '/kids-cam'
+      fullPath: '/kids-cam/'
+      preLoaderRoute: typeof AppsKidsCamIndexRouteImport
+      parentRoute: typeof AppsRouteRoute
+    }
     '/_apps/kids-cam/settings': {
       id: '/_apps/kids-cam/settings'
       path: '/kids-cam/settings'
@@ -331,6 +350,7 @@ interface AppsRouteRouteChildren {
   AppsIndexRoute: typeof AppsIndexRoute
   AppsKidsCamLiveFeedRoute: typeof AppsKidsCamLiveFeedRoute
   AppsKidsCamSettingsRoute: typeof AppsKidsCamSettingsRoute
+  AppsKidsCamIndexRoute: typeof AppsKidsCamIndexRoute
 }
 
 const AppsRouteRouteChildren: AppsRouteRouteChildren = {
@@ -338,6 +358,7 @@ const AppsRouteRouteChildren: AppsRouteRouteChildren = {
   AppsIndexRoute: AppsIndexRoute,
   AppsKidsCamLiveFeedRoute: AppsKidsCamLiveFeedRoute,
   AppsKidsCamSettingsRoute: AppsKidsCamSettingsRoute,
+  AppsKidsCamIndexRoute: AppsKidsCamIndexRoute,
 }
 
 const AppsRouteRouteWithChildren = AppsRouteRoute._addFileChildren(
