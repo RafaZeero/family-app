@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	RTSP_URL_STREAM_01 = "rtsp://rafaa99:Rafa1234@%s/stream1" // Alta qualidade
-	RTSP_URL_STREAM_02 = "rtsp://rafaa99:Rafa1234@%s/stream2" // Baixa qualidade
+	RTSP_URL_STREAM_01 = "rtsp://%s:%s@%s/stream1" // Alta qualidade
+	RTSP_URL_STREAM_02 = "rtsp://%s:%s@%s/stream2" // Baixa qualidade
 )
 
 type Sender interface {
@@ -26,6 +26,8 @@ type Sender interface {
 type VideoStream struct {
 	streamSelection string
 	ip              string
+	username        string
+	password        string
 	cmd             *exec.Cmd
 	url             string
 	stdOutPipe      io.ReadCloser
@@ -62,10 +64,11 @@ func (vs *VideoStream) generateUrl() {
 	case "stream2":
 		rtspURL = RTSP_URL_STREAM_02
 	default:
-		rtspURL = "%s"
+		vs.url = fmt.Sprintf("rtsp://%s", vs.ip)
+		return
 	}
 
-	vs.url = fmt.Sprintf(rtspURL, vs.ip)
+	vs.url = fmt.Sprintf(rtspURL, vs.username, vs.password, vs.ip)
 }
 
 func (vs *VideoStream) generateCmd() error {
@@ -173,10 +176,12 @@ func (vs *VideoStream) Stop() {
 	vs.stdErrPipe = nil
 }
 
-func (vs *VideoStream) StartStream(ip, stream string, c Sender) {
+func (vs *VideoStream) StartStream(ip, username, password, stream string, c Sender) {
 	vs.Stop()
 
 	vs.ip = ip
+	vs.username = username
+	vs.password = password
 	vs.streamSelection = stream
 	vs.generateUrl()
 

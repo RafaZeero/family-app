@@ -30,7 +30,7 @@ interface RTSPViewerProps {
 export default function RTSPViewer({
   serverUrl = "ws://localhost:3005/?auth_conn=VdpfcQzI4TSaXn88465ZWP_DRmKdXk19LffV7TEpti0=",
 }: RTSPViewerProps) {
-  const { ip } = useCameraStore();
+  const { ip, username, password } = useCameraStore();
   const [isConnected, setIsConnected] = useState(false);
   const [streamState, setStreamState] = useState<StreamState>("idle");
   const [currentStream, setCurrentStream] = useState<string | null>(null);
@@ -138,7 +138,7 @@ export default function RTSPViewer({
     );
 
     return () => clearContent();
-  }, [isConnected, streamState, currentStream, selectedStream, ip]);
+  }, [isConnected, streamState, currentStream, selectedStream, ip, username, password]);
 
   // --- WebSocket ---
   const connectWebSocket = () => {
@@ -186,7 +186,7 @@ export default function RTSPViewer({
 
   const startStream = (streamKey: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey, ip }));
+      wsRef.current.send(JSON.stringify({ action: "start", stream: streamKey, ip, username, password }));
       setCurrentStream(streamKey);
       setStreamState("playing");
     }
@@ -333,6 +333,10 @@ export default function RTSPViewer({
             <li>
               <span className="font-medium text-foreground">IP:</span>{" "}
               {ip || <span className="italic">nao configurado</span>}
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Usuario:</span>{" "}
+              {username || <span className="italic">nao configurado</span>}
             </li>
             <li>
               <span className="font-medium text-foreground">Stream 1:</span>{" "}

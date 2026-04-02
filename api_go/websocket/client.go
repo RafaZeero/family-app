@@ -59,7 +59,7 @@ func (c *Client) readPump(m *Manager, vs *ffmpeg.VideoStream) {
 				log.Println("Empty ip")
 				break
 			}
-			vs.StartStream(wsPayload.IP, wsPayload.Stream, c)
+			vs.StartStream(wsPayload.IP, wsPayload.Username, wsPayload.Password, wsPayload.Stream, c)
 		case ACTION_STOP:
 			vs.Stop()
 		default:

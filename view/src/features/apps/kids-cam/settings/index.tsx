@@ -6,20 +6,28 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 
 export const SettingsPage = () => {
-  const { ip, setIp } = useCameraStore();
-  const [value, setValue] = useState(ip);
+  const { ip, username, password, setIp, setUsername, setPassword } = useCameraStore();
+  const [ipValue, setIpValue] = useState(ip);
+  const [usernameValue, setUsernameValue] = useState(username);
+  const [passwordValue, setPasswordValue] = useState(password);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setValue(ip);
-  }, [ip]);
+    setIpValue(ip);
+    setUsernameValue(username);
+    setPasswordValue(password);
+  }, [ip, username, password]);
 
   const handleSave = async () => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    await setIp(trimmed);
+    const trimmedIp = ipValue.trim();
+    if (!trimmedIp) return;
+    await setIp(trimmedIp);
+    await setUsername(usernameValue.trim());
+    await setPassword(passwordValue.trim());
     toast.success("Configurações salvas");
   };
 
@@ -27,6 +35,11 @@ export const SettingsPage = () => {
     e.preventDefault();
     handleSave();
   };
+
+  const hasChanges =
+    ipValue.trim() !== ip ||
+    usernameValue.trim() !== username ||
+    passwordValue.trim() !== password;
 
   return (
     <Layout>
@@ -43,14 +56,44 @@ export const SettingsPage = () => {
             <Input
               id="camera-ip"
               placeholder="ex: 192.168.0.5"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
+              value={ipValue}
+              onChange={(e) => setIpValue(e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="camera-username">Usuario</Label>
+            <Input
+              id="camera-username"
+              placeholder="ex: admin"
+              value={usernameValue}
+              onChange={(e) => setUsernameValue(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="camera-password">Senha</Label>
+            <div className="relative">
+              <Input
+                id="camera-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="senha da câmera"
+                value={passwordValue}
+                onChange={(e) => setPasswordValue(e.target.value)}
+                className="pr-9"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Button
               type="submit"
-              disabled={value.trim() === ip || !value.trim()}
+              disabled={!hasChanges || !ipValue.trim()}
             >
               Salvar
             </Button>
