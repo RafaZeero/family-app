@@ -78,10 +78,11 @@ export default function RTSPViewer({
       setContent(
         <button
           onClick={connectWebSocket}
-          className={`${iconBtn} bg-primary text-primary-foreground hover:bg-primary/90`}
+          className={`${iconBtn} flex items-center gap-1.5 px-2.5 bg-primary text-primary-foreground hover:bg-primary/90`}
           title="Conectar"
         >
           <Power size={15} />
+          <span className="text-xs font-medium">Conectar</span>
         </button>,
       );
       return () => clearContent();
