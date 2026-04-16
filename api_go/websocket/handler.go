@@ -14,14 +14,6 @@ var errInvalidAuthConn = errors.New("Token de verificacao invalido")
 
 const AUTH_CONN = "VdpfcQzI4TSaXn88465ZWP_DRmKdXk19LffV7TEpti0="
 
-type WSPayload struct {
-	Action   string `json:"action"`
-	Stream   string `json:"stream"`
-	IP       string `json:"ip"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }

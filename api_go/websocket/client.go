@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"family-app-server/ffmpeg"
+	"family-app-server/types"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -46,7 +47,7 @@ func (c *Client) readPump(m *Manager, vs *ffmpeg.VideoStream) {
 			break
 		}
 
-		var wsPayload WSPayload
+		var wsPayload types.WSPayload
 
 		if err := json.Unmarshal(msg, &wsPayload); err != nil {
 			log.Println("Erro parsing data")
@@ -59,7 +60,7 @@ func (c *Client) readPump(m *Manager, vs *ffmpeg.VideoStream) {
 				log.Println("Empty ip")
 				break
 			}
-			vs.StartStream(wsPayload.IP, wsPayload.Username, wsPayload.Password, wsPayload.Stream, c)
+			vs.StartStream(wsPayload, c)
 		case ACTION_STOP:
 			vs.Stop()
 		default:

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package detector;
+
+option go_package = "api_go/proto/detectorpb";
+
+service DetectorService {
+  rpc Detect(DetectRequest) returns (DetectResponse);
+}
+
+message DetectRequest {
+  string source_id = 1;
+  string payload = 2;
+  int64 timestamp_ms = 3;
+}
+
+message DetectResponse {
+  bool ok = 1;
+  string message = 2;
+  string received_source_id = 3;
+  string received_payload = 4;
+  int64 processed_at_ms = 5;
+}
